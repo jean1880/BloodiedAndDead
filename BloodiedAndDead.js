@@ -270,6 +270,26 @@ const BLOODIED_AND_DEAD = (() => {
     };
 
     /**
+     * Spawns a built-in FX preset at a position but aimed in a random direction, so blood
+     * splatters spray outward differently each time instead of always firing the preset's
+     * default way. Uses `spawnFxBetweenPoints`, which orients the effect from `pos` toward a
+     * second point placed at a random angle ~70px away. No-op on missing args.
+     * @param {?Position} pos    - Where to spawn; ignored if null.
+     * @param {?string}   effect - FX preset name (e.g. 'splatter-blood'); ignored if falsy.
+     * @returns {void}
+     */
+    const SPAWN_DIRECTED = (pos, effect) => {
+        if (!pos || !effect) return;
+        const angle = (randomInteger(360) - 1) * (Math.PI / 180);
+        const distance = 70;
+        const target = {
+            x: pos.x + Math.cos(angle) * distance,
+            y: pos.y + Math.sin(angle) * distance
+        };
+        spawnFxBetweenPoints({ x: pos.x, y: pos.y }, target, effect, pos.pageid);
+    };
+
+    /**
      * Whether an FX name looks usable: either a built-in "<type>-<color>" preset or the name
      * of a custom FX defined in the game. Used to warn (not block) on likely typos, so future
      * presets and custom effects are never rejected outright.
@@ -446,12 +466,12 @@ const BLOODIED_AND_DEAD = (() => {
 
         if (ratio >= CONFIG.heavyDamageThreshold) {
             SPAWN(pos, CONFIG.bloodFxHeavy);
-            SPAWN(pos, CONFIG.bloodFx);
+            SPAWN_DIRECTED(pos, CONFIG.bloodFx);
         } else if (ratio >= CONFIG.heavyDamageThreshold / 2) {
-            SPAWN(pos, CONFIG.bloodFx);
-            SPAWN(JITTER(pos), CONFIG.bloodFx);
+            SPAWN_DIRECTED(pos, CONFIG.bloodFx);
+            SPAWN_DIRECTED(JITTER(pos), CONFIG.bloodFx);
         } else {
-            SPAWN(pos, CONFIG.bloodFx);
+            SPAWN_DIRECTED(pos, CONFIG.bloodFx);
         }
     };
 
